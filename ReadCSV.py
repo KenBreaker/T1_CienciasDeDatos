@@ -36,7 +36,7 @@ output.write("id_Producto,Cantidad_de_repeticiones\n")
 
 #Se eliminan duplicados para evitar comparar reiteradas veces el mismo numero
 mylist = list( dict.fromkeys(products))
-#print(len(mylist)) cantidad de productos diferentes
+#print(len(mylist)) #cantidad de productos diferentes
 for i in range (len(mylist)):
     #print(str(mylist[i])+","+str(products.count(mylist[i]))+"\n")
     output.write(str(mylist[i])+","+str(products.count(mylist[i]))+"\n") #Se cuenta la cantidad de repeticiones de cada palabra
