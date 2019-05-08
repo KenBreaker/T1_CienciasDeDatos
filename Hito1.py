@@ -13,18 +13,26 @@ class Order(object):
 
 
 class Pair(object):
-    def __init__(self, product_id1, product_id2):
-        self.product_id1 = product_id1
-        self.product_id2 = product_id2
+    def __init__(self, product_1, product_2):
+        self.product_1 = product_1
+        self.product_2 = product_2
         self.totalSales = 0
 
 
+class Product(object):
+    def __init__(self, product_id, product_name):
+        self.product_id = product_id
+        self.product_name = product_name
+
+
+ProductNames = []
 products = []
 Orders = []
+idList = []
 i = -1
 aux = 0
 
-# Lectura del archivo
+# Lectura del archivo con las transacciones
 try:
     file = open("INPUT/order_products__train.csv", "r")
     file.readline()
@@ -43,47 +51,68 @@ except FileNotFoundError:
     print("El archivo INPUT/order_products_train.csv no existe")
     exit(-1)
 
+# Lectura de los productos para obtener su nombre
+try:
+    file = open("INPUT/products.csv", "r", encoding='utf-8')
+    file.readline()
+    for line in file:
+        data = line.split(",")
+        ProductNames.append(Product(data[0], data[1].replace(",", " ")))
+    file.close()
+    print("Lectura de INPUT/products.csv finalizada")
+except FileNotFoundError:
+    print("El archivo INPUT/products.csv no existe")
+    exit(-1)
+'''
+# Se crea una lista solo con los productos para facilitar el computo
 for k in Orders:
     # print("order id", k.order_id ,"product id", k.product_id) Toda la info esta guardada en Orders
-    # Se crea una lista solo con los productos para facilitar el computo
     length = len(k.product_id)
     for x in range(length):
-        products.append(int(k.product_id[x]))
-print("Lista productos finalizada")
+        products.append(k.product_id[x])
+    # Se eliminan los duplicados para evitar redundancia
+    # print(len(mylist)) # cantidad de productos diferentes
+print("Lista de productos finalizada")
 
-output = open("OUTPUT/1D_output.csv", "w")
-output.write("id_Producto,Cantidad_de_repeticiones\n")
+idList = list(dict.fromkeys(products))
+output = open("OUTPUT/1D_output.csv", "w", encoding='utf-8')
+output.write("id_Producto,Nombre_producto,Cantidad_de_repeticiones\n")
     
 # Se eliminan duplicados para evitar comparar reiteradas veces el mismo numero
-myList = list(dict.fromkeys(products))
-# print(len(mylist)) # cantidad de productos diferentes
-length = len(myList)
+# myList = list(dict.fromkeys(products))
+
+length = len(idList)
+# Se escribe en CSV la ID del producto con su nombre, y su cantidad de ventas
 for i in range(length):
     # print(str(mylist[i]) + "," + str(products.count(mylist[i])) + "\n")
-    # Se cuenta la cantidad de repeticiones de cada palabra
-    output.write(str(myList[i]) + "," + str(products.count(myList[i])) + "\n")
+    name = "Missing"
+    for x in ProductNames:
+        if idList[i] == x.product_id:
+            name = x.product_name
+            break
+    output.write(str(idList[i]) + "," + name + "," + str(products.count(idList[i])) + "\n")
 output.close()
 print("Escritura en 1D_output finalizada")
 
-reader = csv.DictReader(open('OUTPUT/1D_output.csv', 'r'))
+reader = csv.DictReader(open('OUTPUT/1D_output.csv', 'r', encoding='utf-8'))
 result = sorted(reader, key=lambda d: float(d['Cantidad_de_repeticiones']), reverse=True)
-writer = csv.DictWriter(open('OUTPUT/1D_output_sorted.csv', 'w', newline=''), reader.fieldnames)
+writer = csv.DictWriter(open('OUTPUT/1D_output_sorted.csv', 'w', encoding='utf-8', newline=''), reader.fieldnames)
 writer.writeheader()
 writer.writerows(result)
 print("Escritura en 1D_output_sorted finalizada")
-
+'''
 Pairs = []
 products = []
 try:
-    file = open("OUTPUT/1D_output_sorted.csv", "r")
+    file = open("OUTPUT/1D_output_sorted.csv", "r", encoding='utf-8')
     file.readline()
     i = 0
     for line in file:
         data = line.split(",")
-        # Si los productos comienzan a tener menor a 1000 ventas se ignorarán para el análisis 2D
-        if int(data[1]) < 1000:
+        # Si los productos comienzan a tener menor a 500 ventas se ignorarán para el análisis 2D
+        if int(data[2]) < 500:
             break
-        products.append(int(data[0]))
+        products.append(Product(data[0], data[1]))
         i = i + 1
     file.close()
     print("Lectura de 1D_output_sorted finalizada")
@@ -95,10 +124,10 @@ lengthProducts = len(products)
 pos = 0
 for i in range(lengthProducts):
     for j in range(i, lengthProducts):
-        if products[i] != products[j]:
+        if products[i].product_id != products[j].product_id:
             Pairs.append(Pair(products[i], products[j]))
             for k in Orders:
-                if k.pair_exists(products[i], products[j]):
+                if k.pair_exists(products[i].product_id, products[j].product_id):
                     Pairs[pos].totalSales += 1
             if Pairs[pos].totalSales == 0:
                 Pairs.pop(pos)
@@ -109,8 +138,13 @@ print("Calculo de pares finalizado")
 Pairs.sort(key=lambda paircito: paircito.totalSales, reverse=True)
 print("Ordenamiento de pares finalizado")
 
-output = open("OUTPUT/2D_output.csv", "w")
-output.write("id_Producto1,id_Producto2,Cantidad_de_repeticiones\n")
+output = open("OUTPUT/2D_output.csv", "w", encoding='utf-8')
+output.write("id_Producto1,Nombre_producto_1,id_Producto2,Nombre_producto_2,Cantidad_de_repeticiones\n")
 for pair in Pairs:
-    output.write(str(pair.product_id1) + "," + str(pair.product_id2) + "," + str(pair.totalSales) + "\n")
+    output.write(str(pair.product_1.product_id) + "," +
+                 pair.product_1.product_name + "," +
+                 str(pair.product_2.product_id) + ","
+                 + pair.product_2.product_name + "," +
+                 str(pair.totalSales) + "\n")
+output.close()
 print("Escritura de OUTPUT/2D_output.csv finalizado")
