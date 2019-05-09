@@ -43,7 +43,7 @@ try:
             Orders.append(Order(data[0]))
             aux = data[0]
         if data[0] == aux:
-            Orders[i].product_id.append( int(data[1]))
+            Orders[i].product_id.append(int(data[1]))
             aux = data[0]
     file.close()
     print("Lectura de INPUT/order_products_train.csv finalizada")
@@ -51,21 +51,20 @@ except FileNotFoundError:
     print("El archivo INPUT/order_products_train.csv no existe")
     exit(-1)
 
-#output fpgrowth
+# Escritura del archivo que se utilizará como input para FP-Growth
 try:
-    file = open("OUTPUT/fpgrowth.csv", "w", encoding='utf-8')
-    print("Escribir fpgrowth.csv")
+    file = open("OUTPUT/fpgrowth_input.csv", "w", encoding='utf-8')
     for order in Orders:
         file.write(str(order.order_id))
-        for product in range(len(order.product_id)):
-            file.write(","+str(order.product_id[product]))
+        length = len(order.product_id)
+        for product in range(length):
+            file.write("," + str(order.product_id[product]))
         file.write("\n")
     file.close()
-    print("Finalizo escritura fpgrowth.csv")
+    print("Escritura en OUTPUT/fpgrowth_input,csv finalizada")
 except FileNotFoundError:
     print("No se pudo escribir en fpgrowth.csv")
     exit(-1)
-
 
 # Lectura de los productos para obtener su nombre
 try:
@@ -95,13 +94,10 @@ print("Lista de productos finalizada")
 
 idList = list(dict.fromkeys(products))
 
-# Se crea archivo con información varia
-output = open("OUTPUT/info.csv", "w", encoding='utf-8')
-output.write("Cantidad de ordenes: " + str(len(Orders)) + "\n")
-output.write("Cantidad de productos: " + str(len(idList)) + "\n")
-output.write("Media de productos por transacción: " + str(int(prom_prod)) + "\n")
-output.close()
-print("Escritura del archivo OUTPUT/info.csv finalizada")
+# Se imprime información varia
+print("Cantidad de ordenes: " + str(len(Orders)) + "\n")
+print("Cantidad de productos: " + str(len(idList)) + "\n")
+print("Media de productos por transacción: " + str(int(prom_prod)) + "\n")
 
 # Se crea archivo para el análisis 1D
 output = open("OUTPUT/1D_output.csv", "w", encoding='utf-8')
