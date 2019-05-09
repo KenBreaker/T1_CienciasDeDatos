@@ -57,24 +57,37 @@ try:
     file.readline()
     for line in file:
         data = line.split(",")
-        ProductNames.append(Product(data[0], data[1].replace(",", " ")))
+        ProductNames.append(Product(data[0], data[1].replace(",", " ").replace('"', '').replace("'", "")))
     file.close()
     print("Lectura de INPUT/products.csv finalizada")
 except FileNotFoundError:
     print("El archivo INPUT/products.csv no existe")
     exit(-1)
-'''
-# Se crea una lista solo con los productos para facilitar el computo
+
+prom_prod = 0
+# Se crea una lista solo con los productos para facilitar el computo y se calcula la media de productos por transacción
 for k in Orders:
     # print("order id", k.order_id ,"product id", k.product_id) Toda la info esta guardada en Orders
     length = len(k.product_id)
+    prom_prod += length
     for x in range(length):
         products.append(k.product_id[x])
     # Se eliminan los duplicados para evitar redundancia
     # print(len(mylist)) # cantidad de productos diferentes
+prom_prod /= len(Orders)
 print("Lista de productos finalizada")
 
 idList = list(dict.fromkeys(products))
+
+# Se crea archivo con información varia
+output = open("OUTPUT/info.csv", "w", encoding='utf-8')
+output.write("Cantidad de ordenes: " + str(len(Orders)) + "\n")
+output.write("Cantidad de productos: " + str(len(idList)) + "\n")
+output.write("Media de productos por transacción: " + str(int(prom_prod)) + "\n")
+output.close()
+print("Escritura del archivo OUTPUT/info.csv finalizada")
+
+# Se crea archivo para el análisis 1D
 output = open("OUTPUT/1D_output.csv", "w", encoding='utf-8')
 output.write("id_Producto,Nombre_producto,Cantidad_de_repeticiones\n")
     
@@ -100,7 +113,7 @@ writer = csv.DictWriter(open('OUTPUT/1D_output_sorted.csv', 'w', encoding='utf-8
 writer.writeheader()
 writer.writerows(result)
 print("Escritura en 1D_output_sorted finalizada")
-'''
+
 Pairs = []
 products = []
 try:
