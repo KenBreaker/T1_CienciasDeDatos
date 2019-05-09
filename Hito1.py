@@ -43,13 +43,29 @@ try:
             Orders.append(Order(data[0]))
             aux = data[0]
         if data[0] == aux:
-            Orders[i].product_id.append(data[1])
+            Orders[i].product_id.append( int(data[1]))
             aux = data[0]
     file.close()
     print("Lectura de INPUT/order_products_train.csv finalizada")
 except FileNotFoundError:
     print("El archivo INPUT/order_products_train.csv no existe")
     exit(-1)
+
+#output fpgrowth
+try:
+    file = open("OUTPUT/fpgrowth.csv", "w", encoding='utf-8')
+    print("Escribir fpgrowth.csv")
+    for order in Orders:
+        file.write(str(order.order_id))
+        for product in range(len(order.product_id)):
+            file.write(","+str(order.product_id[product]))
+        file.write("\n")
+    file.close()
+    print("Finalizo escritura fpgrowth.csv")
+except FileNotFoundError:
+    print("No se pudo escribir en fpgrowth.csv")
+    exit(-1)
+
 
 # Lectura de los productos para obtener su nombre
 try:
