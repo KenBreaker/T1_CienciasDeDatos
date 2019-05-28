@@ -3,7 +3,7 @@ import time
 
 transactions = []                   # Lista de transacciones
 products = {}                       # Directorio de los productos
-support_threshold = 10              # Mínimo soporte permitido
+support_threshold = 3              # Mínimo soporte permitido
 min_confidence = 0.7                # Mínima confianza permitida
 max_transactions = 10000000         # Cantidad máxima de transacciones a procesar
 
