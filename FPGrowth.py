@@ -50,8 +50,8 @@ except FileNotFoundError:
     exit(-1)
 
 # Se generan patrones frecuentes dado un mínimo de soporte
-support_threshold = 69
-while(support_threshold < 1001):
+support_threshold = 3
+while(support_threshold < 101):
     print("Calculando tiempo para soporte "+str(support_threshold))
     start = time.time()
     patterns = pyfpgrowth.find_frequent_patterns(transactions, support_threshold)
