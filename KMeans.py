@@ -1,6 +1,7 @@
 from sklearn.cluster import KMeans
 import numpy as np
 import random
+import time
 import sys
 transacctions = []
 kmeans_array = []
@@ -8,7 +9,11 @@ kmeans_input = []
 id_max = 0
 lines = 0
 id_split = 1
-n_lineas = 2000
+n_lineas =1000
+n_clusters = 4
+clusters_array = np.zeros([n_clusters], dtype=np.int)
+n_productos=49688
+
 # Read, Randomize & Split
 try:
     print("Lectura de OUTPUT/fpgrowth_input.csv Inicializada")
@@ -16,7 +21,7 @@ try:
     random.shuffle(file)
     for line in file:
         if (lines==0):
-            file_split = open("OUTPUT/Kmeans/split_"+str(id_split)+".csv","w+")
+            file_split = open("OUTPUT/Kmeans/splits/split_"+str(id_split)+".csv","w+")
             print("Split #" + str(id_split) + " Finalizado")
             id_split = id_split + 1
         line = line.split(",")[1:]
@@ -31,23 +36,42 @@ except FileNotFoundError:
     print("El archivo OUTPUT/fpgrowth_input.csv no existe")
     exit(-1)
 
-#ARFF File
+
 try:
-    file = open("OUTPUT/Kmeans/split_"+str(1)+".csv", "r").readlines()
-    i = 0
-    print("Inicializando matriz")
-    kmeans_input = np.full((n_lineas,49688), '0')
-    print("Matriz nula lista")
-    print("Agregando productos a la matriz")
-    for line in file:
-        line = line.replace("[", "")
-        line = line.replace("]", "")
-        line = line.split(",")
-        for idProduct in line:
-            kmeans_input[i][ (int(idProduct)-1)] = 1
-        i = i + 1
-    print("Matriz finalizada")
-    file.close()
+
+    for n_split in range (1,id_split):
+        file = open("OUTPUT/Kmeans/splits/split_"+str(n_split)+".csv", "r").readlines()
+        i = 0
+        print("Inicializando matriz")
+        kmeans_input = np.full((len(file),n_productos), '0')
+        print("Matriz nula lista")
+        print("Agregando productos a la matriz")
+        for line in file:
+            line = line.replace("[", "")
+            line = line.replace("]", "")
+            line = line.split(",")
+            for idProduct in line:
+                kmeans_input[i][ (int(idProduct)-1)] = 1
+            i = i + 1
+        print("Matriz finalizada")
+        print("Ejecutando Kmeans")
+
+
+        start = time.time()
+        kmeans = KMeans(n_clusters=n_clusters).fit(kmeans_input)
+        end = time.time()
+
+        print("Finalizo Kmeans")
+        print("Creando archivo OUTPUT")
+        file_clusters = open("OUTPUT/Kmeans/clusters/clusters_split" + str(n_split) + ".csv", "w+")
+        file_clusters.write(str(end - start) + "\n")
+
+        for i in kmeans.labels_:
+            clusters_array[i] = clusters_array[i]  +  1
+        for i in clusters_array:
+            file_clusters.write(str(i)+"\n")
+
+    '''
     print("Generando archivo ARFF")
     file_clusters = open("OUTPUT/Kmeans/kmeans_clusters.arff", "w+")
     file_clusters.write("@relation productos\n\n")
@@ -60,11 +84,9 @@ try:
         file_clusters.write("\n")
     print("Archivo Creado")
     file_clusters.close()
+    '''
 except FileNotFoundError:
-    print("El archivo OUTPUT/Kmeans/split_"+str(1)+".csv"+" no existe")
+    print("El archivo OUTPUT/Kmeans/splits/split_"+str(n_split)+".csv"+" no existe")
     exit(-1)
 
-    #print("Ejecutando Kmeans")
-    #kmeans = KMeans(n_clusters=2).fit(kmeans_input)
-    #print("Finalizo Kmeans")
 
