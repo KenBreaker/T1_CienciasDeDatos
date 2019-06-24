@@ -2,6 +2,7 @@ from sklearn.cluster import KMeans
 import numpy as np
 import random
 import time
+import pandas
 import sys
 transacctions = []
 kmeans_array = []
@@ -9,10 +10,48 @@ kmeans_input = []
 id_max = 0
 lines = 0
 id_split = 1
-n_lineas =500
+n_lineas =2000
 n_clusters = 2
-
+products = {}
 n_productos=49688
+
+# Se guarda el nombre de los productos
+try:
+    file = open("INPUT/products.csv", "r", encoding='utf-8')
+    file.readline()
+    for line in file:
+        line = line.split(",")
+        products[int(line[0])] = line[1]
+    file.close()
+except FileNotFoundError:
+    print("El archivo INPUT/products.csv no existe")
+    exit(-1)
+
+# Transforma una lista de ID en una variable con los nombres de los productos.
+def id_to_name(id_list):
+    id_list = str(id_list).replace("(", "").replace(")", "").split(",")
+    name_list = []
+    for i in range(0, len(id_list) - 1):
+        name_list.append(products[int(id_list[i])])
+    name_list = sorted(name_list, key=lambda x: x.replace(" ", ""))
+    names = ""
+    if (len(name_list)):
+        names = name_list[0]
+    for i in range(1, len(name_list)):
+        names += ", " + name_list[i]
+    return names
+
+# Se guarda el nombre de los productos
+try:
+    file = open("INPUT/products.csv", "r", encoding='utf-8')
+    file.readline()
+    for line in file:
+        line = line.split(",")
+        products[int(line[0])] = line[1]
+    file.close()
+except FileNotFoundError:
+    print("El archivo INPUT/products.csv no existe")
+    exit(-1)
 
 # Read, Randomize & Split
 try:
@@ -21,7 +60,7 @@ try:
     random.shuffle(file)
     for line in file:
         if (lines==0):
-            file_split = open("OUTPUT/Kmeans/splits/split_"+str(id_split)+".csv","w+")
+            file_split = open("OUTPUT/Kmeans/splits/split_"+str(id_split)+".csv","w")
             print("Split #" + str(id_split) + " Finalizado")
             id_split = id_split + 1
         line = line.split(",")[1:]
@@ -31,15 +70,18 @@ try:
         if (lines== n_lineas):
             lines=0
     print("Lectura de OUTPUT/fpgrowth_input.csv finalizada")
-    #kmeans_array = np.array(transacctions)
 except FileNotFoundError:
     print("El archivo OUTPUT/fpgrowth_input.csv no existe")
     exit(-1)
+def ClusterIndicesNumpy(clustNum, labels_array): #numpy
+    return np.where(labels_array == clustNum)[0]
 
+def ClusterIndicesComp(clustNum, labels_array): #list comprehension
+    return np.array([i for i, x in enumerate(labels_array) if x == clustNum])
 
 try:
 
-    for n_split in range (1,id_split):
+    for n_split in range (1,2):
         file = open("OUTPUT/Kmeans/splits/split_"+str(n_split)+".csv", "r").readlines()
         i = 0
         print("Inicializando matriz")
@@ -50,15 +92,56 @@ try:
             line = line.replace("[", "")
             line = line.replace("]", "")
             line = line.split(",")
+            k = 0
             for idProduct in line:
+                #if k!=0:
                 kmeans_input[i][ (int(idProduct)-1)] = 1
+                #k = k + 1
+
             i = i + 1
         print("Matriz finalizada")
+
         while(n_clusters<=20):
             clusters_array = np.zeros([n_clusters], dtype=np.int)
             print("Ejecutando Kmeans K = "+str(n_clusters)+ " Split = "+str(n_split))
             start = time.time()
-            kmeans = KMeans(n_clusters=n_clusters).fit(kmeans_input)
+            kmeans = KMeans(n_clusters=n_clusters,precompute_distances= True).fit(kmeans_input)
+            end = time.time()
+            print("Finalizo Kmeans")
+            print("Creando archivo OUTPUT")
+            file_clusters = open("OUTPUT/Kmeans/clusters/clusters_split" + str(n_split) + "_K_"+str(n_clusters) +".csv", "w+", encoding='utf-8')
+            file_clusters.write(str(end - start) + "\n")
+            for i in kmeans.labels_:
+                clusters_array[i] = clusters_array[i]  +  1
+            k = 0
+            for i in clusters_array:
+                file_clusters.write(str(i))
+                file_clusters.write("\n")
+            file_clusters.write("\n")
+            for i in range (len(clusters_array)):
+                file_clusters.write("Cluster "+str(i)+"\n")
+                for line in ClusterIndicesComp(k, kmeans.labels_):
+
+                    file[line] = file[line].strip("[]")
+                    file_clusters.write(str(id_to_name((file[line]))))
+
+                file_clusters.write("\n")
+                k = k + 1
+            n_clusters = n_clusters + 2
+            print("OUTPUT Finalizado")
+            file_clusters.close()
+except FileNotFoundError:
+    print("El archivo OUTPUT/Kmeans/splits/split_"+str(n_split)+".csv"+" no existe")
+    exit(-1)
+
+
+
+'''        
+        while(n_clusters<=20):
+            clusters_array = np.zeros([n_clusters], dtype=np.int)
+            print("Ejecutando Kmeans K = "+str(n_clusters)+ " Split = "+str(n_split))
+            start = time.time()
+            kmeans = KMeans(n_clusters=n_clusters,precompute_distances= True).fit(kmeans_input)
             end = time.time()
             print("Finalizo Kmeans")
             print("Creando archivo OUTPUT")
@@ -69,10 +152,14 @@ try:
             for i in clusters_array:
                 file_clusters.write(str(i)+"\n")
             n_clusters = n_clusters + 2
+
+            print( ClusterIndicesNumpy(1, kmeans.labels_) )
+
             print("OUTPUT Finalizado")
             file_clusters.close()
+'''
 
-    '''
+'''
     print("Generando archivo ARFF")
     file_clusters = open("OUTPUT/Kmeans/kmeans_clusters.arff", "w+")
     file_clusters.write("@relation productos\n\n")
@@ -85,9 +172,15 @@ try:
         file_clusters.write("\n")
     print("Archivo Creado")
     file_clusters.close()
-    '''
-except FileNotFoundError:
-    print("El archivo OUTPUT/Kmeans/splits/split_"+str(n_split)+".csv"+" no existe")
-    exit(-1)
+'''
 
 
+'''
+        print("Generando archivo RapidMiner")
+        file_clusters = open("OUTPUT/Kmeans/kmeans_rapidminer.csv", "w")
+        for line in kmeans_input:
+            for i in line:
+                file_clusters.write(str(i) + ",")
+            file_clusters.write("\n")
+        print("Archivo Creado")
+'''
