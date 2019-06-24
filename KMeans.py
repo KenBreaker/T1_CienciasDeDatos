@@ -9,9 +9,9 @@ kmeans_input = []
 id_max = 0
 lines = 0
 id_split = 1
-n_lineas =1000
-n_clusters = 4
-clusters_array = np.zeros([n_clusters], dtype=np.int)
+n_lineas =500
+n_clusters = 2
+
 n_productos=49688
 
 # Read, Randomize & Split
@@ -54,22 +54,23 @@ try:
                 kmeans_input[i][ (int(idProduct)-1)] = 1
             i = i + 1
         print("Matriz finalizada")
-        print("Ejecutando Kmeans")
-
-
-        start = time.time()
-        kmeans = KMeans(n_clusters=n_clusters).fit(kmeans_input)
-        end = time.time()
-
-        print("Finalizo Kmeans")
-        print("Creando archivo OUTPUT")
-        file_clusters = open("OUTPUT/Kmeans/clusters/clusters_split" + str(n_split) + ".csv", "w+")
-        file_clusters.write(str(end - start) + "\n")
-
-        for i in kmeans.labels_:
-            clusters_array[i] = clusters_array[i]  +  1
-        for i in clusters_array:
-            file_clusters.write(str(i)+"\n")
+        while(n_clusters<=20):
+            clusters_array = np.zeros([n_clusters], dtype=np.int)
+            print("Ejecutando Kmeans K = "+str(n_clusters)+ " Split = "+str(n_split))
+            start = time.time()
+            kmeans = KMeans(n_clusters=n_clusters).fit(kmeans_input)
+            end = time.time()
+            print("Finalizo Kmeans")
+            print("Creando archivo OUTPUT")
+            file_clusters = open("OUTPUT/Kmeans/clusters/clusters_split" + str(n_split) + "_K_"+str(n_clusters) +".csv", "w+")
+            file_clusters.write(str(end - start) + "\n")
+            for i in kmeans.labels_:
+                clusters_array[i] = clusters_array[i]  +  1
+            for i in clusters_array:
+                file_clusters.write(str(i)+"\n")
+            n_clusters = n_clusters + 2
+            print("OUTPUT Finalizado")
+            file_clusters.close()
 
     '''
     print("Generando archivo ARFF")
