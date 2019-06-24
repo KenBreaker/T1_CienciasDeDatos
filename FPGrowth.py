@@ -3,7 +3,7 @@ import time
 
 transactions = []                   # Lista de transacciones
 products = {}                       # Directorio de los productos
-support_threshold = 10              # Mínimo soporte permitido
+support_threshold = 3              # Mínimo soporte permitido
 min_confidence = 0.7                # Mínima confianza permitida
 max_transactions = 10000000         # Cantidad máxima de transacciones a procesar
 
@@ -50,20 +50,30 @@ except FileNotFoundError:
     exit(-1)
 
 # Se generan patrones frecuentes dado un mínimo de soporte
-start = time.time()
-patterns = pyfpgrowth.find_frequent_patterns(transactions, support_threshold)
-'''
-filename = "OUTPUT/FP_Growth/frequent_patterns_" + str(support_threshold) + "S.csv"
-file = open(filename, "w", encoding='utf-8')
-for key, value in patterns.items():
-    # print(str(key) + ": " + str(value))
-    file.write("{" + id_to_name(key) + "}: " + str(value) + "\n")
-file.close()
-'''
+support_threshold = 3
+while(support_threshold < 101):
+    print("Calculando tiempo para soporte "+str(support_threshold))
+    start = time.time()
+    patterns = pyfpgrowth.find_frequent_patterns(transactions, support_threshold)
+    '''
+    filename = "OUTPUT/FP_Growth/frequent_patterns_" + str(support_threshold) + "S.csv"
+    file = open(filename, "w", encoding='utf-8')
+    for key, value in patterns.items():
+        # print(str(key) + ": " + str(value))
+        file.write("{" + id_to_name(key) + "}: " + str(value) + "\n")
+    file.close()
+    '''
+    # Se generan reglas de asociación dado un mínimo de confianza. La variable KEY es el antecedente, VALUE[0] es el consecuente, e VALUE[1] es la confianza
+    rules = pyfpgrowth.generate_association_rules(patterns, min_confidence)
+    end = time.time()
+    print(str(support_threshold)+","+str(end-start))
+    filename = "OUTPUT/FP_Growth/SupportVSTime.txt"
+    file = open(filename, "a")
+    file.write(str(support_threshold)+","+str(end-start)+"\n")
+    file.close()
+    support_threshold = support_threshold + 1
 
-# Se generan reglas de asociación dado un mínimo de confianza. La variable KEY es el antecedente, VALUE[0] es el consecuente, e VALUE[1] es la confianza
-rules = pyfpgrowth.generate_association_rules(patterns, min_confidence)
-end = time.time()
+'''
 filename = "OUTPUT/FP_Growth/association_rules_" + str(support_threshold) + "S.csv"
 file = open(filename, "w", encoding='utf-8')
 for key, value in sorted(rules.items(), key=lambda kv: kv[1][1], reverse=True):
@@ -77,3 +87,4 @@ print("Tiempo para " + str(len(transactions)) +
       " transacciones, con S=" + str(support_threshold) +
       " y C=" + str(min_confidence) +
       " ====> " + str('%.5f' % float(end-start)) + " seg")
+'''
