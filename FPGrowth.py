@@ -19,7 +19,7 @@ def id_to_name(id_list):
     for i in range(1, len(name_list)):
         names += ", " + name_list[i]
     return names
-
+	
 
 # Se guarda en lista todas las transacciones del archivo fpgrowth_input.csv
 try:
