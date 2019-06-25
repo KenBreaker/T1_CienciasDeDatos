@@ -5,7 +5,7 @@ import time
 import re
 import pandas
 import sys
-transacctions = []
+transactions = []
 kmeans_array = []
 kmeans_input = []
 id_max = 0
@@ -50,7 +50,7 @@ try:
     file = open("OUTPUT/fpgrowth_train_input.csv", "r").readlines()
     random.shuffle(file)
     for line in file:
-        if (lines==0):
+        if (lines == 0):
             file_split = open("OUTPUT/Kmeans/splits/split_"+str(id_split)+".csv","w")
             print("Split #" + str(id_split) + " Finalizado")
             id_split = id_split + 1
