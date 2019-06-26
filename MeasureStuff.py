@@ -2,8 +2,8 @@ import math
 import re
 import pyfpgrowth
 
-n_split = 1                                             # Cantidad máxima de splits
-n_cluster = 10                                          # Cantidad máxima de clusters
+n_split = 13                                            # Cantidad máxima de splits
+n_cluster = 20                                          # Cantidad máxima de clusters
 entropy = []                                            # Cada posición es la entropía (de Shannon) de un split
 entropy_c = [0.0 for x in range(int(n_cluster/2))]      # Cada posición es la entropía (de Shannon) de una cantidad de clusters
 confidence = []                                         # Cada posición es la confianza de un split
@@ -13,10 +13,11 @@ filepath = "OUTPUT/Kmeans/KMeans_results.csv"           # Dirección para el arc
 
 
 # Escritura de la cantidad de clusters en el header
-def write_cluster_header(file_header):
+def write_cluster_header(file_header, matrix_name):
+    file_header.write("Split\Cluster")
     for i in range(2, n_cluster + 1, 2):
         file_header.write(";" + str(i))
-    file_header.write("\n")
+    file_header.write(";;;" + matrix_name +"\n")
 
 
 # Escribe el promedio de los clusters para la entropía y la confianza, además del promedio total de los cluster y splits
@@ -37,7 +38,8 @@ def average_for_cluster_calculator(average_list, amount_of_values):
 
 
 results = open(filepath, "w", encoding='utf-8')
-write_cluster_header(results)
+results.write("sep=;\n")
+write_cluster_header(results, "Entropia")
 
 # Calculo de la entropía promedio de cada split
 for i in range(n_split):
@@ -90,7 +92,7 @@ except FileNotFoundError:
     print("El archivo INPUT/products.csv no existe")
     exit(-1)
 
-write_cluster_header(results)
+write_cluster_header(results, "Confianza")
 #Calculo de confianza promedio de cada split. Solo se considera mayor cluster en cada split.
 for i in range(n_split):
     confidence.append(0.0)
@@ -100,6 +102,7 @@ for i in range(n_split):
         try:
             file = open("OUTPUT/Kmeans/clusters/clusters_split" + str(i + 1) + "_K_" + str(j) + ".csv", "r", encoding='utf-8')
             file.readline()
+            print("Leyendo OUTPUT/Kmeans/clusters/clusters_split" + str(i + 1) + "_K_" + str(j) + ".csv")
             # Guarda la cantidad de transacciones en cada cluster
             for k in range(j):
                 line = file.readline()
@@ -129,16 +132,22 @@ for i in range(n_split):
             print("No se pudo encontrar el archivo OUTPUT/Kmeans/clusters/clusters_split" + str(i + 1) + "_K_" + str(j) + ".csv")
             continue
         # Se generan patrones frecuentes dado un mínimo soporte de 6
+        print("Encontrando patrones frecuentes...")
         patterns = pyfpgrowth.find_frequent_patterns(transactions, 6)
         # Se generan reglas de asociación con confianza mínima del 50%
+        print("Generando reglas de asociación...")
         rules = pyfpgrowth.generate_association_rules(patterns, 0.7)
         # Se promedia la confianza de las reglas de asociación obtenidas. VALUE[1] corresponde a la confianza
+        print("Escribiendo resultados...\n")
         confidence_cluster = 0.0
         for key, value in rules.items():
             confidence_cluster += float(value[1])
-            print(str(key) + " => " + str(value[0]) + " | " + str('%.3f' % float(value[1])))
-        print("Cantidad de reglas: " + str(len(rules)) + "\n")
-        average_confidence = (confidence_cluster / len(rules))
+            #print(str(key) + " => " + str(value[0]) + " | " + str('%.3f' % float(value[1])))
+        #print("Cantidad de reglas: " + str(len(rules)) + "\n")
+        if len(rules) > 0:
+            average_confidence = (confidence_cluster / len(rules))
+        else:
+            average_confidence = 0
         confidence[i] += average_confidence
         confidence_c[int(j / 2 - 1)] += average_confidence
         results.write(";" + str('%.3f' % float(average_confidence)))
